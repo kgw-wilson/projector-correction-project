@@ -15,7 +15,7 @@ sys.path.append("..")
 from utils.metrics import distance
 from utils.transform_recorded import manual_perspective_transform, ensure_clockwise
 from utils.color import color_correct
-from collection.plt_corners import click_corners, check_corners
+from utils.plt_corners import click_corners, check_corners
 
 # Figure for use throughout recording
 fig, ax = plt.subplots(facecolor=(0, 0, 0))
@@ -64,7 +64,7 @@ for limit in [10,5,1]:
     corrections = []
 
     for num in range(1, NUM_FRAMES+1):
-        actual = cv2.imread(f"{INPUT_DIR}/output_{num}.png")
+        actual = cv2.imread(f"{INPUT_DIR}/frame_{num}.png")
         corrections_np = np.array(corrections, dtype=np.int32)
         print(f"Corrections shape at {num}: {corrections_np.shape}")
         if len(corrections) > 0:

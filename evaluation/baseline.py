@@ -12,7 +12,7 @@ import sys
 sys.path.append("..")
 from utils.metrics import distance
 from utils.transform_recorded import manual_perspective_transform, ensure_clockwise
-from collection.plt_corners import click_corners, check_corners
+from utils.plt_corners import click_corners, check_corners
 
 # Figure for use throughout recording
 fig, ax = plt.subplots(facecolor=(0, 0, 0))
@@ -56,7 +56,7 @@ points_clockwise = ensure_clockwise(selected_points)
 
 
 for num in range(1, NUM_FRAMES+1):
-    actual = cv2.imread(f"{INPUT_DIR}/output_{num}.png")
+    actual = cv2.imread(f"{INPUT_DIR}/frame_{num}.png")
     show_centered(actual, "Actual")
     if num == 1:
         print("Prep for correction")

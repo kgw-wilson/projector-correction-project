@@ -26,7 +26,7 @@ Exploration of more sophisticated filtering techniques may have proven fruitful,
 
 #### Data
 For testing purposes, we used 75 frames from *The Wolf of Wall Street (2013)*. Here are a few sample frames from the data set.
-![](./test_frames/output_13.png) ![](./test_frames/output_46.png) ![](./test_frames/output_26.png)
+![](./test_frames/frame_13.png) ![](./test_frames/frame_46.png) ![](./test_frames/frame_26.png)
 
 #### Evaluation Metrics
 We propose a single primary evaluation metric for our experiments, the normalized pixel-wise MAE (Mean Absolute Error). The value is the normalized distance between a recorded image and the actual image produced on the computer. We calculate this metric by taking the absolute difference between the two images’ intensities and dividing by the maximum possible difference between two images of that size to obtain a result in the range of 0 to 1, inclusive; with a value of 1 suggesting maximum dissimilarity and a value of 0 corresponding to an exact match.
