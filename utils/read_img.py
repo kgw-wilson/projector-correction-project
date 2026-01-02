@@ -1,18 +1,21 @@
-"""Utils to read images"""
-
+import numpy as np
 import cv2
 
-def pathToCV2(path):
+
+def pathToCV2(path: str) -> np.ndarray:
     """
-    Reads images (usually in the input folder) and 
-    returns them as cv2 images in RGB format.
+    Read an image from a file and return it as an RGB image.
+
+    OpenCV reads images in BGR format by default. This function converts the
+    image to RGB format for consistency with typical workflows.
 
     Parameters:
-        path (str): Path to the file to convert to RGB OpenCV image
+        path: str Path to the image file.
 
-    Return:
-        rgb (cv2 image): RGB OpenCV image created using imread
+    Returns:
+        rgb: Image in RGB format as a NumPy array.
     """
+
     bgr = cv2.imread(path)
     rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
     return rgb
