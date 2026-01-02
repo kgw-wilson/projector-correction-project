@@ -1,5 +1,3 @@
 # Notebooks
 
-This file contains the jupyter notebooks we use 
-to demonstrate the functionality we've
-created.
+This folder contains jupyter notebooks that demonstrate the functionality we've created.
