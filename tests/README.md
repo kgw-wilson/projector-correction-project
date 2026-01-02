@@ -1,13 +1,14 @@
-This folder contains the python
-tests we'll write as we create 
-the project. From project root, 
-run all with
+# Tests
+
+This folder contains python tests to ensure functionality is working as intended.
+
+From project root, run all with:
 
 ```shell
 pytest
 ```
 
-or run specific test with 
+Or run a specific test with:
 
 ```shell
 pytest tests/test_example.py
