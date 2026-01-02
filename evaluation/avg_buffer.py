@@ -15,7 +15,7 @@ sys.path.append("..")
 from utils.metrics import distance
 from utils.transform_recorded import manual_perspective_transform, ensure_clockwise
 from utils.color import color_correct
-from collection.plt_corners import click_corners, check_corners
+from utils.plt_corners import click_corners, check_corners
 
 # Figure for use throughout recording
 fig, ax = plt.subplots(facecolor=(0, 0, 0))

@@ -17,7 +17,7 @@ No corrections were applied to the actual image being projected.
 ## Single Adjustment
 
 For both the "Static Correction" and "Mean adjusted" measures present
-in our results graph (see /results/Results.png), one correction was 
+in our results graph (see /results/results.png), one correction was 
 calculated using the first frame and then was applied to every subsequent
 frame. In the case of static correction, this was the pixelwise difference
 between the actual and the transformed recorded for frame 1. In the case
