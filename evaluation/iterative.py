@@ -1,57 +1,45 @@
 """
-Evaluation for the iterative process.
+Evaluation for the iterative correction process (making a set number
+of adaptive adjustments for every frame).
 """
 
 import cv2
 import matplotlib.pyplot as plt
 import time
 import numpy as np
-import sys
-sys.path.append("..")
+from evaluation.common import (
+    plt,
+    NUM_FRAMES,
+    show_centered,
+    get_video_capture,
+    get_first_test_frame_image,
+    get_projected_image_bounds,
+    INPUT_DIR,
+    OUTPUT_DIR,
+)
 from utils.metrics import distance
-from utils.transform_recorded import manual_perspective_transform, ensure_clockwise
-from utils.plt_corners import click_corners, check_corners
+from utils.transform_recorded import manual_perspective_transform
 
-# Figure for use throughout recording
-fig, ax = plt.subplots(facecolor=(0, 0, 0))
-ax.axis('off')
-plt.subplots_adjust(left=0, right=1, top=1, bottom=0)
-
-def show_centered(image, title):
-    ax.set_title(title)
-    ax.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
-    plt.draw()
-    plt.pause(0.01)
-
-# index 1 for front-facing laptop camera, index 0 for usb-attached webcam
-cap = cv2.VideoCapture(0) 
-time.sleep(0.5)
-if not cap.isOpened():
-    raise Exception("Error: Could not open webcam")
+cap = get_video_capture()
 
 INPUT_DIR = "../test_frames"
-OUTPUT_DIR = "../outputs/iterative"
-NUM_FRAMES = 75
 
-# Keep looping until the desired image is recorded by the user
-while True:
-    ret, image = cap.read()
-    show_centered(image, "Press any key to confirm, click to redo")
-    key = plt.waitforbuttonpress()
-    if key:
-        # plt.close()
-        break
-    time.sleep(3) # Wait 3 seconds for user to readjust/change screen
+output_dir = OUTPUT_DIR / "iterative"
 
-# Variable for storing selected points, initialize to [] if points are needed
-# find_points, selected_points = True, []
-# old: find_points, selected_points = False, np.array([(468, 633), (460, 231), (1426, 230), (1417, 629)], dtype=np.float32) # OR []
-find_points, selected_points = False, np.array([(471, 614), (462, 214), (1424, 214), (1415, 610)], dtype=np.float32) # OR []
-if find_points:
-    selected_points = click_corners(image)
-    check_corners(image, selected_points)
-points_clockwise = ensure_clockwise(selected_points)
+test_frame_recorded = get_first_test_frame_image(cap)
 
+known_projector_image_bounds = np.array(
+    [(471, 614), (462, 214), (1424, 214), (1415, 610)], dtype=np.float32
+)
+
+points_clockwise = get_projected_image_bounds(
+    test_frame_recorded, known_projector_image_bounds
+)
+
+
+# Define a kernel for use in blurring the correction
+# to hopefully help reduce artifacts and make gradual
+# adjustments over a small area
 kernel_size = 25
 sigma = 5.0
 kernel_x = cv2.getGaussianKernel(kernel_size, sigma)
@@ -61,25 +49,39 @@ kernel /= np.sum(kernel)
 
 NUM_ADJUSTMENTS = 5
 
-for num in range(1, NUM_FRAMES+1):
-    actual = cv2.imread(f"{INPUT_DIR}/frame_{num}.png")
-    correction = 0
-    curr_actual = actual.astype(np.float32)
+for num in range(1, NUM_FRAMES + 1):
+
+    base_actual = cv2.imread(f"{INPUT_DIR}/frame_{num}.png")
+    curr_actual = base_actual.astype(np.float32)
+    correction = np.zeros_like(base_actual)
+
     for i in range(NUM_ADJUSTMENTS):
-        curr_actual = np.clip((curr_actual + correction), 0, 255).astype(np.uint8)
-        show_centered(curr_actual, "Actual")
+
+        # Show the actual image for the frame with any corrections applied
+        curr_actual = np.clip((curr_actual + correction), 0, 255)
+        show_centered(curr_actual.astype(np.uint8), "Actual")
+
+        # Wait for user to begin flow of subsequent frames
         if num == 1 and i == 0:
             print("Prep for correction")
             plt.waitforbuttonpress(0)
+
+        # Wait so that the camera can see the currently shown corrected_actual image
         time.sleep(0.5)
+
+        # Read from the camera and crop/transform read image to line up with actual
         _, rec = cap.read()
+        trans_rec = manual_perspective_transform(base_actual, rec, points_clockwise)
 
-        trans_rec = manual_perspective_transform(actual, rec, points_clockwise)
-        if not isinstance(correction, np.ndarray):
-            correction = np.clip(curr_actual - trans_rec.astype(np.float32), -2,2)
-            filtered_corr = cv2.filter2D(correction, -1, kernel)
+        # Calculate the error between what is projected (curr_actual) and
+        # what is read by the camera (trans_rec). Limit corrections to 2 pixel
+        # values in either direction to prevent oscillations and artifacts.
+        error = curr_actual - trans_rec.astype(np.float32)
+        filtered_error = cv2.filter2D(error, -1, kernel)
+        filtered_error = np.clip(filtered_error, -2, 2)
+        correction += error + filtered_error
 
-        dist = distance(curr_actual, trans_rec)
+        dist = distance(base_actual, trans_rec)
         print(f"Distance for {num, i}: {dist}")
-        curr_actual = np.clip((curr_actual + filtered_corr), 0, 255)
-    cv2.imwrite(f"{OUTPUT_DIR}/trans_rec_{num}.png", trans_rec)
+
+    cv2.imwrite(f"{output_dir}/trans_rec_{num}.png", trans_rec)
